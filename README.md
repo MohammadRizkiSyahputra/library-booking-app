@@ -50,15 +50,9 @@ DB_DSN = mysql:host=localhost;port=3306;db_name=library_booking_app
 DB_USER = root
 DB_PASSWORD =
 
-# Konfigurasi Aplikasi
-APP_ENV = dev
-APP_DEBUG = true
-APP_URL = http://localhost:8000
-
-# Konfigurasi Email (Development)
+# Konfigurasi Email 
 MAIL_USER = yourgmail@gmail.com
 MAIL_PASS = your_gmail_app_password
-MAIL_FROM = Library Booking <yourgmail@gmail.com>
 ```
 
 💡 **Tips:**  
@@ -146,7 +140,6 @@ Contoh konfigurasi:
 ```ini
 MAIL_USER = yourgmail@gmail.com
 MAIL_PASS = abcd efgh ijkl mnop
-MAIL_FROM = Library Booking <yourgmail@gmail.com>
 ```
 
 ---
@@ -157,3 +150,4 @@ Proyek ini dibuat untuk keperluan **pembelajaran dan pengembangan akademik (PBL)
 pada **Politeknik Negeri Jakarta**, Program Studi **Teknik Informatika (TI)**.
 
 © 2025 Kelompok 3 PBL — All Rights Reserved.
+
