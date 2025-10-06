@@ -46,7 +46,7 @@ cp .env.example .env
 Kemudian buka `.env` dan ubah sesuai konfigurasi lokal kamu:
 ```ini
 # Konfigurasi Database
-DB_DSN = mysql:host=localhost;port=3306;db_name=library_booking_app
+DB_DSN = mysql:host=localhost;port=3306;dbname=library_booking_app
 DB_USER = root
 DB_PASSWORD =
 
@@ -150,4 +150,5 @@ Proyek ini dibuat untuk keperluan **pembelajaran dan pengembangan akademik (PBL)
 pada **Politeknik Negeri Jakarta**, Program Studi **Teknik Informatika (TI)**.
 
 © 2025 Kelompok 3 PBL — All Rights Reserved.
+
 
