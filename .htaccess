@@ -1,0 +1,10 @@
+Options -Multiviews
+RewriteEngine On
+RewriteBase /project/library-booking-app/public/
+
+# serve real files/folders as-is (CSS/JS/img)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# pass everything to index.php
+RewriteRule ^ index.php [L]
