@@ -126,7 +126,7 @@ class Router {
         }
 
         ob_start();
-        include_once App::$ROOT_DIR . "/app/views/layouts/{$layout}.php";
+        include_once App::$ROOT_DIR . "/App/Views/layouts/{$layout}.php";
         return ob_get_clean();
     }
 
@@ -138,7 +138,7 @@ class Router {
         }
 
         ob_start();
-        include_once App::$ROOT_DIR . "/app/views/{$view}.php";
+        include_once App::$ROOT_DIR . "/App/Views/{$view}.php";
         return ob_get_clean();
     }
 }

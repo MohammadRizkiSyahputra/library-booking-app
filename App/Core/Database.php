@@ -29,6 +29,8 @@ class Database {
 
         $newMigrations = [];
         // Baca semua file di folder /migrations
+        $migrationFolder = App::$ROOT_DIR.'/migrations';
+        $this->log($migrationFolder);
         $files = scandir(App::$ROOT_DIR.'/migrations');
         // Bandingkan file migration yang ada dengan yang sudah disimpan di DB
         $toApplyMigrations = array_diff($files, $appliedMigration);
