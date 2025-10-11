@@ -17,7 +17,7 @@ use App\Core\App;
 
 <?php if ($devOtp = App::$app->session->get('dev_otp_display')): ?>
   <div style="border: 2px solid orange; padding: 20px; margin: 20px 0; background: #fff3cd;">
-    <h3 style="color: #856404;">🔧 DEVELOPMENT MODE - OTP Code</h3>
+    <h3 style="color: #856404;">DEVELOPMENT MODE - OTP Code</h3>
     <p><strong>User:</strong> <?= htmlspecialchars($devOtp['user']) ?> (<?= htmlspecialchars($devOtp['email']) ?>)</p>
     <p><strong>OTP Code:</strong> <span style="font-size: 32px; color: #d63384; font-weight: bold; letter-spacing: 5px;"><?= htmlspecialchars($devOtp['otp']) ?></span></p>
     <p><strong>Purpose:</strong> <?= $devOtp['purpose'] === 'reset_password' ? 'Password Reset' : 'Account Verification' ?></p>
