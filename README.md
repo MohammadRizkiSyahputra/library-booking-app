@@ -46,6 +46,8 @@ APP_NAME = "Library Booking App"
 APP_ENV = development
 APP_DEBUG = true
 APP_TIMEZONE = Asia/Jakarta
+SESSION_LIFETIME = 7200
+
 
 # Database
 DB_HOST = localhost

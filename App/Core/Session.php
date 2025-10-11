@@ -9,6 +9,20 @@ class Session
     public function __construct()
     {
         if (session_status() === PHP_SESSION_NONE) {
+            $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || (($_ENV['APP_ENV'] ?? '') === 'production');
+
+            $lifetime = (int)($_ENV['SESSION_LIFETIME'] ?? 7200);
+
+            session_set_cookie_params([
+                'lifetime' => $lifetime,
+                'path' => '/',
+                'domain' => '',
+                'secure' => $isSecure,
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+
             session_start();
         }
 

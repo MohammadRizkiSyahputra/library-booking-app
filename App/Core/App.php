@@ -77,7 +77,8 @@ class App
         $this->session->set('user', $primaryValue);
 
         if ($remember) {
-            setcookie('remember_user', $primaryValue, time() + (30 * 24 * 60 * 60), '/', '', false, true);
+            $lifetime = (int)($_ENV['SESSION_LIFETIME'] ?? 7200);
+            setcookie('remember_user', $primaryValue, time() + $lifetime, '/', '', false, true);
         }
 
         return true;

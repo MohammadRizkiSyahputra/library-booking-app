@@ -11,6 +11,7 @@ return [
         'url' => $_ENV['APP_URL'] ?? 'http://localhost',
         'timezone' => $_ENV['APP_TIMEZONE'] ?? 'Asia/Jakarta',
         'log_level' => $_ENV['APP_LOG_LEVEL'] ?? 'debug',
+        'session_lifetime' => (int)($_ENV['SESSION_LIFETIME'] ?? 7200),
     ],
 
     'userClass' => User::class,
