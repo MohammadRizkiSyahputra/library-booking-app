@@ -10,11 +10,18 @@ class Database
 
     public function __construct(array $config)
     {
-        $dsn = $config['dsn'] ?? '';
+        $host = $config['host'] ?? 'localhost';
+        $port = $config['port'] ?? '3306';
+        $dbname = $config['name'] ?? '';
+        $charset = $config['charset'] ?? 'utf8mb4';
         $user = $config['user'] ?? '';
-        $pass = $config['password'] ?? '';
+        $pass = $config['pass'] ?? '';
 
-        $this->pdo = new PDO($dsn, $user, $pass);
+        $this->pdo = new PDO(
+            "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}",
+            $user,
+            $pass
+        );
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 

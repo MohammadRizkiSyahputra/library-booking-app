@@ -76,7 +76,7 @@ CREATE DATABASE library_booking_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 ```
 
 ```bash
-php migrations.php
+php migration.php
 php seed.php
 ```
 

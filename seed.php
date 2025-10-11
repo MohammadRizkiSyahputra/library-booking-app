@@ -9,9 +9,12 @@ use App\Core\Database;
 
 $config = [
     'db' => [
-        'dsn' => $_ENV['DB_DSN'] ?? '',
-        'user' => $_ENV['DB_USER'] ?? '',
-        'password' => $_ENV['DB_PASSWORD'] ?? ''
+        'host' => $_ENV['DB_HOST'] ?? 'localhost',
+        'port' => $_ENV['DB_PORT'] ?? '3306',
+        'name' => $_ENV['DB_NAME'] ?? 'library_booking_app',
+        'user' => $_ENV['DB_USER'] ?? 'root',
+        'password' => $_ENV['DB_PASS'] ?? '',
+        'charset' => $_ENV['DB_CHARSET'] ?? 'utf8mb4'
     ]
 ];
 

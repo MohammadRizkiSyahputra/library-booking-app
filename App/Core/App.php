@@ -36,20 +36,6 @@ class App
 
         $dbConfig = $config['database'] ?? $config['db'] ?? [];
         
-        if (isset($dbConfig['host'])) {
-            $dbConfig = [
-                'dsn' => sprintf(
-                    'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-                    $dbConfig['host'],
-                    $dbConfig['port'] ?? '3306',
-                    $dbConfig['name'] ?? 'library_booking_app',
-                    $dbConfig['charset'] ?? 'utf8mb4'
-                ),
-                'user' => $dbConfig['user'] ?? 'root',
-                'password' => $dbConfig['pass'] ?? '',
-            ];
-        }
-        
         $this->db = new Database($dbConfig);
 
         $primaryValue = $this->session->get('user');
