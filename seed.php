@@ -30,9 +30,9 @@ if (!$check->fetch()) {
     $adminPassword = password_hash('admin123', PASSWORD_DEFAULT);
     $stmt = $db->prepare("INSERT INTO users (nama, email, password, role, status) VALUES (?, ?, ?, ?, ?)");
     $stmt->execute(['Admin User', 'admin@pnj.ac.id', $adminPassword, 'admin', 'verified']);
-    echo "✓ Admin user created\n";
+    echo "Admin user created\n";
 } else {
-    echo "✓ Admin user already exists\n";
+    echo "Admin user already exists\n";
 }
 echo "  Email: admin@pnj.ac.id\n";
 echo "  Password: admin123\n\n";
@@ -45,9 +45,9 @@ if (!$check->fetch()) {
     $userPassword = password_hash('test1234', PASSWORD_DEFAULT);
     $stmt = $db->prepare("INSERT INTO users (nama, nim, email, password, role, status) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute(['Test Mahasiswa', '1234567890', 'mahasiswa@stu.pnj.ac.id', $userPassword, 'mahasiswa', 'verified']);
-    echo "✓ Mahasiswa user created\n";
+    echo "Mahasiswa user created\n";
 } else {
-    echo "✓ Mahasiswa user already exists\n";
+    echo "Mahasiswa user already exists\n";
 }
 echo "  Email: mahasiswa@stu.pnj.ac.id\n";
 echo "  NIM: 1234567890\n";
@@ -61,9 +61,9 @@ if (!$check->fetch()) {
     $userPassword = password_hash('test1234', PASSWORD_DEFAULT);
     $stmt = $db->prepare("INSERT INTO users (nama, nip, email, password, role, status) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute(['Test Dosen', '123456789012345678', 'dosen@tik.pnj.ac.id', $userPassword, 'dosen', 'verified']);
-    echo "✓ Dosen user created\n";
+    echo "Dosen user created\n";
 } else {
-    echo "✓ Dosen user already exists\n";
+    echo "Dosen user already exists\n";
 }
 echo "  Email: dosen@tik.pnj.ac.id\n";
 echo "  NIP: 123456789012345678\n";
