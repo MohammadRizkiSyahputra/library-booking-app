@@ -2,26 +2,40 @@
 namespace App\Core\Form;
 
 class Form {
-    // Method ini dipakai untuk memulai tag <form>
-    // Contoh pemakaian di view:
-    // <?php $form = Form::begin('/login', 'post')
-    public static function begin($action, $method) {
-        // Cetak tag <form> dengan atribut action dan method
-        echo sprintf('<form action="%s" method="%s">', $action, $method);
-        // Kembalikan instance Form supaya bisa lanjut panggil field()
+    public static function begin($action, $method, $options = []) {
+        $enctype = $options['enctype'] ?? '';
+        $enctypeAttr = $enctype ? sprintf(' enctype="%s"', htmlspecialchars($enctype)) : '';
+        echo sprintf('<form action="%s" method="%s"%s>', $action, $method, $enctypeAttr);
         return new Form();
     }
 
-    // Method ini menutup tag </form>
-    // Dipanggil di akhir form
     public static function end() {
         echo '</form>';
     }
 
-    // Method ini digunakan untuk membuat field input baru
-    // Parameter: model (data yang di-bind) dan attribute (nama field)
     public function field($model, $attribute) {
-        // Buat instance Field yang akan render input HTML
         return new Field($model, $attribute);
+    }
+
+    public static function fileField($name, $label, $accept = null, $required = false) {
+        $html = '<div>';
+        $html .= sprintf('<label for="%s">%s</label>', htmlspecialchars($name), htmlspecialchars($label));
+        $html .= sprintf(
+            '<input type="file" id="%s" name="%s"%s%s>',
+            htmlspecialchars($name),
+            htmlspecialchars($name),
+            $accept ? ' accept="' . htmlspecialchars($accept) . '"' : '',
+            $required ? ' required' : ''
+        );
+        $html .= '</div>';
+        return $html;
+    }
+
+    public static function button($text, $type = 'submit') {
+        return sprintf('<button type="%s">%s</button>', htmlspecialchars($type), htmlspecialchars($text));
+    }
+
+    public static function hiddenField($name, $value) {
+        return sprintf('<input type="hidden" name="%s" value="%s">', htmlspecialchars($name), htmlspecialchars($value));
     }
 }

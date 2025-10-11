@@ -1,2 +1,15 @@
-vendor
+vendor/
+node_modules/
 .env
+storage/logs/*.log
+storage/cache/*.cache
+public/uploads/kubaca/*
+!public/uploads/kubaca/.gitkeep
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+composer.lock

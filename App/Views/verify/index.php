@@ -1,35 +1,39 @@
-<?php 
-use App\Core\Form\Form;
+<?php
+/** @var \App\Models\VerificationModel $model */
 use App\Core\App;
-/** @var \App\Models\VerifyModel $model */
 ?>
 
-<div class="max-w-md mx-auto bg-white shadow-xl rounded-xl p-8 mt-12 text-center">
-  <?php if ($m = App::$app->session->getFlash('success')): ?>
-    <div class="mb-4 rounded bg-green-100 border border-green-200 text-green-800 p-3"><?= $m ?></div>
-  <?php endif; ?>
-  <?php if ($m = App::$app->session->getFlash('error')): ?>
-    <div class="mb-4 rounded bg-red-100 border border-red-200 text-red-800 p-3"><?= $m ?></div>
-  <?php endif; ?>
+<!-- Disini za buat styling css sama atur2 margin lah -->
 
-  <h1 class="text-2xl font-semibold mb-2 text-gray-800">Verify Your Account</h1>
-  <p class="text-gray-600 mb-6">Enter the 6-character code we emailed to you.</p>
+<h2>Verify Your Account</h2>
 
-  <?php $form = Form::begin('/verify', 'post'); ?>
-    <?= $form->field($model, 'code')->otpStyle(); ?>
-    <button type="submit"
-            class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition">
-      Verify
-    </button>
+<?php if ($m = App::$app->session->getFlash('success')): ?>
+  <p><?= htmlspecialchars($m) ?></p>
+<?php endif; ?>
 
-    <p class="text-sm text-gray-500 text-center mt-4">
-      Didn't receive a code?
-      <a href="/resend"
-         id="resendLink"
-         class="text-indigo-600 hover:underline disabled:opacity-50 disabled:pointer-events-none">Resend Code</a>
-      <span id="cooldownTimer" class="text-gray-400 ml-1 hidden">(60s)</span>
-    </p>
-  <?php Form::end(); ?>
-</div>
+<?php if ($m = App::$app->session->getFlash('error')): ?>
+  <p><?= htmlspecialchars($m) ?></p>
+<?php endif; ?>
 
-<script src="/js/verify.js"></script>
+<?php if ($devOtp = App::$app->session->get('dev_otp_display')): ?>
+  <div style="border: 2px solid orange; padding: 20px; margin: 20px 0; background: #fff3cd;">
+    <h3 style="color: #856404;">DEVELOPMENT MODE - OTP Code</h3>
+    <p><strong>User:</strong> <?= htmlspecialchars($devOtp['user']) ?> (<?= htmlspecialchars($devOtp['email']) ?>)</p>
+    <p><strong>OTP Code:</strong> <span style="font-size: 32px; color: #d63384; font-weight: bold; letter-spacing: 5px;"><?= htmlspecialchars($devOtp['otp']) ?></span></p>
+    <p><strong>Purpose:</strong> <?= $devOtp['purpose'] === 'reset_password' ? 'Password Reset' : 'Account Verification' ?></p>
+    <p style="color: #856404;"><em>In production mode, this will be sent via email.</em></p>
+  </div>
+  <?php App::$app->session->remove('dev_otp_display'); ?>
+<?php endif; ?>
+
+<p>Enter the 6-digit code sent to your email.</p>
+
+<?php
+use App\Core\Form\Form;
+$form = Form::begin('/verify', 'post');
+?>
+  <?= $form->field($model, 'code')->label('Verification Code')->type('text') ?>
+  <?= Form::button('Verify') ?>
+<?php Form::end(); ?>
+
+<p>Didn't receive code? <a href="/resend">Resend</a></p>

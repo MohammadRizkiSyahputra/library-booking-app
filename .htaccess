@@ -1,4 +1,4 @@
-Options -Multiviews
+Options -Indexes
 RewriteEngine On
 RewriteBase /project/library-booking-app/public/
 

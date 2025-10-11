@@ -1,154 +1,96 @@
-# 📚 Library Booking App
+# Library Booking App 
 
-Aplikasi web berbasis PHP (MVC) untuk manajemen peminjaman ruangan perpustakaan, dikembangkan sebagai bagian dari **Project-Based Learning (PBL)**  
-Program Studi **Teknik Informatika – Politeknik Negeri Jakarta (PNJ)**.
+Aplikasi web untuk booking ruangan perpustakaan, dibuat pakai PHP dengan arsitektur MVC. Ini adalah bagian dari project **PBL (Project-Based Learning)** di **Teknik Informatika – Politeknik Negeri Jakarta**.
 
----
-
-## ⚙️ Kebutuhan Sistem
-
-| Komponen | Versi Minimum |
-|-----------|----------------|
-| PHP | 8.1+ |
-| Composer | Terbaru |
-| MySQL / MariaDB | 10+ |
-
-Pastikan ekstensi PHP berikut aktif:
-- `pdo_mysql`
-- `openssl`
-- `mbstring`
-- `intl`
-- `tokenizer`
 
 ---
 
-## 🚀 Langkah Menjalankan Aplikasi (Dari Awal Sampai Jalan)
+## Fitur sekarang:
+- Register (pakai NIM untuk Mahasiswa, NIP untuk Dosen)
+- Verifikasi email pakai OTP
+- Login (bisa pakai Email/NIM/NIP)
+- Logout
+- Lupa password & reset password
+- CSRF protection, password hashing, input validation
+- Middleware (Auth, Admin, Guest) di `App\Core\Middleware`
+- Email service & logging di `App\Core\Services`
 
-Ikuti langkah-langkah berikut secara urut dari awal clone sampai aplikasi benar-benar bisa diakses di browser.
+---
 
-### 1️⃣ Clone Repository
+## Cara Jalanin Aplikasi
+
+Yang dibutuhin:
+- PHP 8.1+
+- Composer
+- MySQL/MariaDB
+- Ekstensi PHP: `pdo_mysql`, `openssl`, `mbstring`, `fileinfo`
+
+### 1. Clone & Install
+
 ```bash
 git clone https://github.com/MohammadRizkiSyahputra/library-booking-app.git
 cd library-booking-app
-```
-
-### 2️⃣ Install Dependency Composer
-```bash
 composer install
 ```
 
-### 3️⃣ Buat dan Atur File `.env`
-Salin file contoh `.env.example` jadi `.env`:
+### 2. Setup Environment
+
 ```bash
 cp .env.example .env
 ```
 
-Kemudian buka `.env` dan ubah sesuai konfigurasi lokal kamu:
+Buka file `.env`, isi konfigurasi database & email:
 ```ini
-# Konfigurasi Database
-DB_DSN = mysql:host=localhost;port=3306;dbname=library_booking_app
-DB_USER = root
-DB_PASSWORD =
+# Application
+APP_NAME = "Library Booking App"
+APP_ENV = development
+APP_DEBUG = true
+APP_TIMEZONE = Asia/Jakarta
 
-# Konfigurasi Email 
-MAIL_USER = yourgmail@gmail.com
-MAIL_PASS = your_gmail_app_password
+# Database
+DB_HOST = localhost
+DB_PORT = 3306
+DB_NAME = library_booking_app
+DB_USER = root
+DB_PASS = 
+
+# Email (Gmail)
+MAIL_HOST = smtp.gmail.com
+MAIL_PORT = 587
+MAIL_USERNAME = yourgmail@gmail.com
+MAIL_PASSWORD = your_gmail_app_password
+MAIL_ENCRYPTION = tls
+MAIL_FROM_ADDRESS = yourgmail@gmail.com
+MAIL_FROM_NAME = "Library Booking App"
 ```
 
-💡 **Tips:**  
-Kamu bisa membuat sandi aplikasi Gmail di sini 👉 [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)  
-Pastikan **Verifikasi 2 Langkah** di akun Google kamu sudah aktif.  
+**Buat Gmail App Password:**  
+Buka [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), aktifin 2-Step Verification dulu, terus bikin app password buat SMTP.
 
----
+### 3. Bikin Database & Jalanin Migration
 
-### 4️⃣ Buat Database di MySQL / MariaDB
-Masuk ke terminal MySQL, lalu jalankan:
 ```sql
 CREATE DATABASE library_booking_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
----
-
-### 5️⃣ Jalankan Migrasi Database
-Perintah ini akan membuat seluruh tabel yang dibutuhkan:
 ```bash
-php migration.php
-```
-Contoh hasil:
-```
-> Applying migration: 2024_00_create_users_table
-> Migration applied successfully.
+php migrations.php
+php seed.php
 ```
 
----
+### 4. Jalanin Server
 
-### 6️⃣ Jalankan Server PHP
-Gunakan server bawaan PHP:
 ```bash
 php -S localhost:8000 -t public
 ```
 
-Setelah itu buka browser dan akses:
-👉 **http://localhost:8000**
+Buka browser, akses **http://localhost:8000**
 
-Jika konfigurasi sudah benar, aplikasi **Library Booking App** akan tampil di halaman utama.
+### 5. Login
 
----
-
-### 7️⃣ Uji Alur Aplikasi
-1. Registrasi menggunakan email PNJ (`@stu.pnj.ac.id` atau `<jurusan>.pnj.ac.id`)  
-2. Cek email untuk menerima kode verifikasi  
-3. Masukkan kode tersebut di halaman **Verifikasi Akun**  
-4. Setelah berhasil diverifikasi, login ke dashboard  
-5. Coba fitur **Lupa Password → Reset Password** untuk memastikan pengiriman email berjalan
+**Admin:** `admin@pnj.ac.id` / `admin123`  
+**Mahasiswa:** `mahasiswa@stu.pnj.ac.id` / `test1234`  
+**Dosen:** `dosen@tik.pnj.ac.id` / `test1234`
 
 ---
-
-## 🧠 Struktur Folder
-```
-app/
- ├── controllers/     → Mengatur logika request (Auth, Password, Verify, dll)
- ├── core/            → File inti framework (App, Controller, Model, Router)
- ├── models/          → Model data & validasi
- ├── views/           → Template tampilan (auth, dashboard, dll)
- └── services/        → Service helper (EmailService, dll)
-
-public/
- ├── index.php        → Entry point aplikasi
- ├── js/              → File JavaScript (verify.js, dll)
- └── assets/          → File statis (CSS, gambar, dll)
-
-routes/
- └── web.php          → Definisi route web
-
-.env.example          → Contoh file konfigurasi environment
-migration.php         → Skrip migrasi database
-composer.json         → Dependency & autoload Composer
-```
-
----
-
-## 💌 Konfigurasi Email (Gmail / SMTP)
-
-Jika menggunakan Gmail:
-1. Aktifkan **Verifikasi 2 Langkah** di akun Google  
-2. Buka [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)  
-3. Pilih **Other (Custom name)** → beri nama misalnya `LibraryApp`  
-4. Salin sandi 16 karakter yang muncul, lalu tempel ke `.env` pada `MAIL_PASS`
-
-Contoh konfigurasi:
-```ini
-MAIL_USER = yourgmail@gmail.com
-MAIL_PASS = abcd efgh ijkl mnop
-```
-
----
-
-## 🧾 Lisensi
-
-Proyek ini dibuat untuk keperluan **pembelajaran dan pengembangan akademik (PBL)**  
-pada **Politeknik Negeri Jakarta**, Program Studi **Teknik Informatika (TI)**.
-
-© 2025 Kelompok 3 PBL — All Rights Reserved.
-
 

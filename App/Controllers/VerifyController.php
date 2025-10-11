@@ -1,71 +1,74 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\App;
-use App\Models\RegisterModel;
-use App\Controllers\AuthController;
-use App\Services\EmailService;
-
+use App\Models\User;
+use App\Models\VerificationForm;
+use App\Core\Services\EmailService;
+use App\Core\Services\CacheService;
 
 class VerifyController extends Controller
 {
-    public function verify(Request $request, Response $response){
-    $this->setLayout('auth');
-    $this->setTitle('Verify Account | Library Booking App');
+    public function verify(Request $request, Response $response)
+    {
+        $this->setLayout('auth');
+        $this->setTitle('Verify Account | Library Booking App');
 
-    $userId = App::$app->session->get('user_id_pending');
-    if (!$userId) {
-        App::$app->session->setFlash('error', 'No pending verification session. Please register again.');
-        $response->redirect('/register');
-        return;
-    }
-
-    $model = new \App\Models\VerifyModel();
-
-    if ($request->isPost()) {
-        $model->loadData($request->getBody());
-
-        if (!$model->validate()) {
-            return $this->render('verify/index', ['model' => $model]);
-        }
-
-        $code = strtoupper(trim($model->code));
-        $user = RegisterModel::findOne(['id' => $userId]);
-        if (!$user) {
-            App::$app->session->setFlash('error', 'User not found. Please register again.');
+        $userId = App::$app->session->get('user_id_pending');
+        if (!$userId) {
+            App::$app->session->setFlash('error', 'No pending verification. Please register again.');
             $response->redirect('/register');
             return;
         }
 
-        if (!$user->verification_expires_at || strtotime($user->verification_expires_at) < time()) {
-            App::$app->session->setFlash('error', 'Verification code expired. Please request a new one.');
-            $response->redirect('/verify/resend');
+        $model = new VerificationForm();
+
+        if ($request->isPost()) {
+            $model->loadData($request->getBody());
+
+            if (!$model->validate()) {
+                return $this->render('verify/index', ['model' => $model]);
+            }
+
+            $code = trim($model->code);
+            $cachedHash = CacheService::get('otp_' . $userId);
+
+            if (!$cachedHash) {
+                App::$app->session->setFlash('error', 'Verification code expired.');
+                return $this->render('verify/index', ['model' => $model]);
+            }
+
+            if (!password_verify($code, $cachedHash)) {
+                App::$app->session->setFlash('error', 'Invalid verification code.');
+                return $this->render('verify/index', ['model' => $model]);
+            }
+
+            $user = User::findOne(['id' => $userId]);
+            $newStatus = ($user->role === 'dosen') ? 'verified' : 'active';
+
+            $stmt = App::$app->db->prepare("UPDATE users SET status = :status WHERE id = :id");
+            $stmt->bindValue(':status', $newStatus);
+            $stmt->bindValue(':id', $userId);
+            $stmt->execute();
+
+            CacheService::delete('otp_' . $userId);
+            App::$app->session->remove('user_id_pending');
+            
+            if ($user->role === 'dosen') {
+                App::$app->session->setFlash('success', 'Account verified! You can now log in.');
+            } else {
+                App::$app->session->setFlash('success', 'Email verified! You can now log in');
+            }
+            
+            $response->redirect('/login');
             return;
         }
 
-        if (!password_verify($code, (string)$user->verification_code)) {
-            App::$app->session->setFlash('error', 'Invalid verification code.');
-            return $this->render('verify/index', ['model' => $model]);
-        }
-
-        $stmt = App::$app->db->prepare("
-            UPDATE users 
-            SET status = 1, verification_code = NULL, verification_expires_at = NULL 
-            WHERE id = :id
-        ");
-        $stmt->bindValue(':id', $user->id);
-        $stmt->execute();
-
-        App::$app->session->remove('user_id_pending');
-        App::$app->session->setFlash('success', 'Account verified. Please log in.');
-        $response->redirect('/login');
-        return;
-    }
-
-    return $this->render('verify/index', ['model' => $model]);
+        return $this->render('verify/index', ['model' => $model]);
     }
 
     public function resend(Request $request, Response $response)
@@ -73,34 +76,32 @@ class VerifyController extends Controller
         $userId = App::$app->session->get('user_id_pending');
 
         if (!$userId) {
-            App::$app->session->setFlash('error', 'No pending verification session. Please register again.');
+            App::$app->session->setFlash('error', 'No pending verification. Please register again.');
             $response->redirect('/register');
             return;
         }
 
-        $user = RegisterModel::findOne(['id' => $userId]);
+        $user = User::findOne(['id' => $userId]);
         if (!$user) {
-            App::$app->session->setFlash('error', 'User not found. Please register again.');
+            App::$app->session->setFlash('error', 'User not found.');
             $response->redirect('/register');
             return;
         }
 
-        // Prevent spamming — store resend timestamp in session
         $lastResend = App::$app->session->get('last_resend_time');
         if ($lastResend && (time() - $lastResend < 60)) {
-            App::$app->session->setFlash('error', 'Please wait a minute before requesting a new code.');
+            App::$app->session->setFlash('error', 'Please wait before requesting a new code.');
             $response->redirect('/verify');
             return;
         }
 
-        // ✅ Update resend timestamp
         App::$app->session->set('last_resend_time', time());
 
-        // Generate and send new code
-        EmailService::sendVerificationCode($user, 'register');
+        $otp = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        CacheService::set('otp_' . $user->id, password_hash($otp, PASSWORD_DEFAULT), 900);
+        EmailService::sendVerificationCode($user, $otp, 'register');
 
-        App::$app->session->setFlash('success', 'A new verification code has been sent to your email.');
+        App::$app->session->setFlash('success', 'New verification code sent.');
         $response->redirect('/verify');
     }
-
 }

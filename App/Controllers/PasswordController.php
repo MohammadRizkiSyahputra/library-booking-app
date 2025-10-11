@@ -6,10 +6,10 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\App;
-use App\Models\RegisterModel;
-use App\Models\ForgotPasswordModel;
-use App\Models\ResetPasswordModel;
-use App\Services\EmailService;
+use App\Models\User;
+use App\Models\PasswordResetForm;
+use App\Core\Services\EmailService;
+use App\Core\Services\CacheService;
 
 class PasswordController extends Controller
 {
@@ -18,28 +18,28 @@ class PasswordController extends Controller
         $this->setLayout('auth');
         $this->setTitle('Forgot Password | Library Booking App');
 
-        $model = new ForgotPasswordModel();
+        $model = new PasswordResetForm();
 
         if ($request->isPost()) {
             $model->loadData($request->getBody());
-
-            // Validate input (email required & valid)
+            $model->mode = 'request';
+            
             if (!$model->validate()) {
                 return $this->render('forgot/index', ['model' => $model]);
             }
 
-            // Find user using RegisterModel
-            $user = RegisterModel::findOne(['email' => trim($model->email)]);
+            $user = User::findOne(['email' => trim($model->email)]);
             if (!$user) {
                 App::$app->session->setFlash('error', 'Email not found.');
                 return $this->render('forgot/index', ['model' => $model]);
             }
 
-            // Send OTP code for reset
-            EmailService::sendVerificationCode($user, 'reset_password');
+            $otp = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            CacheService::set('reset_otp_' . $user->id, password_hash($otp, PASSWORD_DEFAULT), 900);
+            EmailService::sendVerificationCode($user, $otp, 'reset_password');
 
             App::$app->session->set('reset_user_id', $user->id);
-            App::$app->session->setFlash('success', 'A reset code has been sent to your email.');
+            App::$app->session->setFlash('success', 'Reset code sent to your email.');
             $response->redirect('/reset');
             return;
         }
@@ -52,16 +52,16 @@ class PasswordController extends Controller
         $this->setLayout('auth');
         $this->setTitle('Reset Password | Library Booking App');
 
-        $model = new ResetPasswordModel();
+        $model = new PasswordResetForm();
 
         $userId = App::$app->session->get('reset_user_id');
         if (!$userId) {
-            App::$app->session->setFlash('error', 'Session expired. Please request a new reset.');
+            App::$app->session->setFlash('error', 'Session expired.');
             $response->redirect('/forgot');
             return;
         }
 
-        $user = RegisterModel::findOne(['id' => $userId]);
+        $user = User::findOne(['id' => $userId]);
         if (!$user) {
             App::$app->session->setFlash('error', 'User not found.');
             $response->redirect('/forgot');
@@ -70,30 +70,27 @@ class PasswordController extends Controller
 
         if ($request->isPost()) {
             $model->loadData($request->getBody());
-
-            // Validate fields before further checking
+            $model->mode = 'reset';
+            
             if (!$model->validate()) {
                 return $this->render('reset/index', ['model' => $model]);
             }
 
-            // Verify code from email
-            if (!EmailService::verifyCode($user, trim($model->code))) {
+            $cachedHash = CacheService::get('reset_otp_' . $userId);
+            if (!$cachedHash || !password_verify(trim($model->code), $cachedHash)) {
                 App::$app->session->setFlash('error', 'Invalid or expired code.');
                 return $this->render('reset/index', ['model' => $model]);
             }
 
-            // Hash new password & update
             $hash = password_hash($model->password, PASSWORD_DEFAULT);
             $stmt = App::$app->db->prepare("UPDATE users SET password = :pass WHERE id = :id");
             $stmt->bindValue(':pass', $hash);
             $stmt->bindValue(':id', $user->id);
             $stmt->execute();
 
-            // Clear verification code
-            EmailService::clearCode($user);
-
+            CacheService::delete('reset_otp_' . $userId);
             App::$app->session->remove('reset_user_id');
-            App::$app->session->setFlash('success', 'Password reset successful! You can now log in.');
+            App::$app->session->setFlash('success', 'Password reset successful!');
             $response->redirect('/login');
             return;
         }

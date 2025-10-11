@@ -2,53 +2,65 @@
 
 namespace App\Core;
 
-use App\Core\Middlewares\BaseMiddleware;
+use App\Core\Middleware;
+use App\Core\Exceptions\NotFoundException;
+use App\Core\Exceptions\ForbiddenException;
 
-// Kelas utama aplikasi, jadi “pusat koordinasi” antara request, response, router, dan komponen lain.
-class App {
-
-    // Menyimpan path root project (misalnya: C:\xampp\htdocs\project)
+class App
+{
     public static string $ROOT_DIR;
-
-    // Nama class user (biasanya model User)
     public string $userClass;
-
-    // Komponen utama aplikasi
+    
     public Router $router;
     public Request $request;
     public Response $response;
     public Session $session;
     public Database $db;
-
-    // Instance global App
+    
     public static App $app;
-
-    // Controller yang sedang aktif dijalankan
     public ?Controller $controller = null;
-
-    // Data user yang sedang login (null kalau belum login)
     public ?DbModel $user;
-
-    // Daftar middleware global (yang jalan di semua route)
+    
     protected array $globalMiddlewares = [];
 
-    // Konstruktor utama: inisialisasi semua komponen inti
-    public function __construct($rootPath, array $config) {
+    public function __construct($rootPath, array $config)
+    {
         $this->userClass = $config['userClass'];
         self::$ROOT_DIR = $rootPath;
         self::$app = $this;
 
-        // Buat objek request, response, session, dan router
         $this->request = new Request();
         $this->response = new Response();
         $this->session = new Session();
         $this->router = new Router($this->request, $this->response);
 
-        // Hubungkan ke database (pakai konfigurasi dari config.php)
-        $this->db = new Database($config['db']);
+        $dbConfig = $config['database'] ?? $config['db'] ?? [];
+        
+        if (isset($dbConfig['host'])) {
+            $dbConfig = [
+                'dsn' => sprintf(
+                    'mysql:host=%s;port=%s;dbname=%s;charset=%s',
+                    $dbConfig['host'],
+                    $dbConfig['port'] ?? '3306',
+                    $dbConfig['name'] ?? 'library_booking_app',
+                    $dbConfig['charset'] ?? 'utf8mb4'
+                ),
+                'user' => $dbConfig['user'] ?? 'root',
+                'password' => $dbConfig['pass'] ?? '',
+            ];
+        }
+        
+        $this->db = new Database($dbConfig);
 
-        // Cek apakah ada user yang tersimpan di session (berarti sudah login)
         $primaryValue = $this->session->get('user');
+        
+        if (!$primaryValue && isset($_COOKIE['remember_user'])) {
+            $primaryValue = $_COOKIE['remember_user'];
+            if ($primaryValue) {
+                $this->session->set('user', $primaryValue);
+            }
+        }
+        
         if ($primaryValue) {
             $primaryKey = $this->userClass::primaryKey();
             $this->user = $this->userClass::findOne([$primaryKey => $primaryValue]);
@@ -57,34 +69,42 @@ class App {
         }
     }
 
-    // Method untuk login user (set user ke session)
-    public function login(DbModel $user) {
+    public function login(DbModel $user, bool $remember = false): bool
+    {
         $this->user = $user;
         $primaryKey = $user->primaryKey();
         $primaryValue = $user->{$primaryKey};
         $this->session->set('user', $primaryValue);
+
+        if ($remember) {
+            setcookie('remember_user', $primaryValue, time() + (30 * 24 * 60 * 60), '/', '', false, true);
+        }
+
         return true;
     }
 
-    // Method logout (hapus data user dari session)
-    public function logout(): void {
+    public function logout(): void
+    {
         $this->user = null;
         $this->session->remove('user');
+        
+        if (isset($_COOKIE['remember_user'])) {
+            setcookie('remember_user', '', time() - 3600, '/');
+        }
     }
 
-    // Mengecek apakah user saat ini masih guest (belum login)
-    public static function isGuest() {
+    public static function isGuest(): bool
+    {
         return !self::$app->user;
     }
 
-    // Menambahkan middleware global (jalan di semua request)
-    public function addGlobalMiddleware(BaseMiddleware $middleware) {
+    public function addGlobalMiddleware(Middleware $middleware): void
+    {
         $this->globalMiddlewares[] = $middleware;
     }
 
-    // Menentukan title halaman yang tampil di <title>
-    public function getTitle(): string {
-        // Kalau controller punya title sendiri, pakai itu
+    public function getTitle(): string
+    {
         if ($this->controller && method_exists($this->controller, 'getTitle')) {
             $title = $this->controller->getTitle();
             if (!empty($title)) {
@@ -92,7 +112,6 @@ class App {
             }
         }
 
-        // Kalau gak ada, sesuaikan dengan status kode responsenya
         return match ($this->response->getStatusCode()) {
             403 => '403 Forbidden | Library Booking App',
             404 => '404 Not Found | Library Booking App',
@@ -100,29 +119,33 @@ class App {
         };
     }
 
-    // Method utama untuk menjalankan aplikasi
-    public function run() {
+    public function run(): void
+    {
         try {
-            // Jalankan semua middleware global sebelum routing
             foreach ($this->globalMiddlewares as $middleware) {
                 $middleware->execute();
             }
 
-            // Proses route yang cocok dan tampilkan hasilnya
             echo $this->router->resolve();
 
+        } catch (NotFoundException $e) {
+            $this->response->setStatusCode(404);
+            echo $this->router->renderView('errors/404', ['exception' => $e]);
+            
+        } catch (ForbiddenException $e) {
+            $this->response->setStatusCode(403);
+            echo $this->router->renderView('errors/403', ['exception' => $e]);
+            
         } catch (\Exception $e) {
             $code = (int)($e->getCode() ?: 500);
             $this->response->setStatusCode($code);
-
-            // // Tambahkan ini untuk debug sementara:
-            // echo "<pre style='background:#f9f9f9;border:1px solid #ccc;padding:1em'>";
-            // echo htmlspecialchars($e->getMessage()) . "\n\n";
-            // echo htmlspecialchars($e->getTraceAsString());
-            // echo "</pre>";
-            // exit;
-
-            $errorView = match ($code) { 403 => 'errors/403', 404 => 'errors/404', default => 'errors/500' };
+            
+            $errorView = match ($code) {
+                403 => 'errors/403',
+                404 => 'errors/404',
+                default => 'errors/500'
+            };
+            
             echo $this->router->renderView($errorView, ['exception' => $e]);
         }
     }

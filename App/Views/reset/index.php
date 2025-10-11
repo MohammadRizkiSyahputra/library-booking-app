@@ -1,33 +1,41 @@
 <?php
-use App\Core\Form\Form;
+/** @var \App\Models\PasswordResetModel $model */
 use App\Core\App;
-/** @var \App\Models\ResetPasswordModel $model */
 ?>
 
-<div class="max-w-md mx-auto bg-white shadow-xl rounded-2xl p-8 mt-10">
-  <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">Reset Password</h1>
-  <p class="text-gray-600 text-sm text-center mb-6">
-    Enter the verification code and your new password.
-  </p>
+<!-- Disini za buat styling css sama atur2 margin lah -->
 
-  <?php if ($m = App::$app->session->getFlash('error')): ?>
-    <div class="mb-4 bg-red-100 text-red-700 border border-red-200 rounded-lg p-3 text-sm"><?= $m ?></div>
-  <?php elseif ($m = App::$app->session->getFlash('success')): ?>
-    <div class="mb-4 bg-green-100 text-green-700 border border-green-200 rounded-lg p-3 text-sm"><?= $m ?></div>
-  <?php endif; ?>
+<h2>Reset Password</h2>
 
-  <?php $form = Form::begin('/reset', 'post'); ?>
-    <?= $form->field($model, 'code')->label('Code')->placeholder('Enter verification code'); ?>
-    <?= $form->field($model, 'password')->label('Password')->placeholder('New password'); ?>
-    <?= $form->field($model, 'confirm_password')->label('Konfirm Password')->placeholder('Confirm new password'); ?>
+<?php if ($m = App::$app->session->getFlash('success')): ?>
+  <p><?= htmlspecialchars($m) ?></p>
+<?php endif; ?>
 
-    <button type="submit"
-            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg mt-3 transition">
-      Reset Password
-    </button>
-  <?php Form::end(); ?>
+<?php if ($m = App::$app->session->getFlash('error')): ?>
+  <p><?= htmlspecialchars($m) ?></p>
+<?php endif; ?>
 
-  <div class="text-center mt-4 text-sm">
-    <a href="/login" class="text-indigo-600 hover:underline">Back to login</a>
+<?php if ($devOtp = App::$app->session->get('dev_otp_display')): ?>
+  <div style="border: 2px solid orange; padding: 20px; margin: 20px 0; background: #fff3cd;">
+    <h3 style="color: #856404;">🔧 DEVELOPMENT MODE - OTP Code</h3>
+    <p><strong>User:</strong> <?= htmlspecialchars($devOtp['user']) ?> (<?= htmlspecialchars($devOtp['email']) ?>)</p>
+    <p><strong>OTP Code:</strong> <span style="font-size: 32px; color: #d63384; font-weight: bold; letter-spacing: 5px;"><?= htmlspecialchars($devOtp['otp']) ?></span></p>
+    <p><strong>Purpose:</strong> <?= $devOtp['purpose'] === 'reset_password' ? 'Password Reset' : 'Account Verification' ?></p>
+    <p style="color: #856404;"><em>In production mode, this will be sent via email.</em></p>
   </div>
-</div>
+  <?php App::$app->session->remove('dev_otp_display'); ?>
+<?php endif; ?>
+
+<p>Enter the verification code and your new password.</p>
+
+<?php
+use App\Core\Form\Form;
+$form = Form::begin('/reset', 'post');
+?>
+  <?= $form->field($model, 'code')->label('Verification Code')->type('text') ?>
+  <?= $form->field($model, 'password')->label('New Password') ?>
+  <?= $form->field($model, 'confirm_password')->label('Confirm Password') ?>
+  <?= Form::button('Reset Password') ?>
+<?php Form::end(); ?>
+
+<p><a href="/login">Back to login</a></p>

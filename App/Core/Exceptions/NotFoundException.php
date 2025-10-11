@@ -6,6 +6,6 @@ use Exception;
 
 class NotFoundException extends Exception
 {
-    protected $message = 'Oops! The page you`re looking for doesn`t exist.';
+    protected $message = 'Page not found. The requested resource does not exist.';
     protected $code = 404;
 }

@@ -1,32 +1,62 @@
 <?php
-/** @var \App\Models\LoginModel $model */
-/** @var \App\Core\Form\Form $form */
-/** @var $model \app\models\User */
+/** @var \App\Models\LoginForm $model */
+use App\Core\App;
+use App\Core\Csrf;
 use App\Core\Form\Form;
 ?>
 
-<?php use App\Core\App; ?>
-<div class="max-w-md mx-auto bg-white shadow-xl rounded-xl p-8 mt-12 text-center">
+<!-- Disini za buat edit2 - Add your styling here -->
+
+<div>
+  <div>
+    <h2>Library Booking System</h2>
+    <p>Sign in to your account</p>
+  </div>
+
   <?php if ($m = App::$app->session->getFlash('success')): ?>
-    <div class="mb-4 rounded bg-green-100 border border-green-200 text-green-800 p-3"><?= $m ?></div>
+    <div>
+      <p><?= htmlspecialchars($m) ?></p>
+    </div>
   <?php endif; ?>
 
-<div class="max-w-md mx-auto">
-  <div class="text-center mb-8">
-    <h2 class="text-3xl font-bold text-gray-800 mb-2">Selamat Datang Kembali</h2>
-    <p class="text-gray-600">Login ke akun Library Booking Anda</p>
-  </div>
-  <?php $form = Form::begin('/login', 'post'); ?>
-    <?= $form->field($model, 'identifier')->label('Email atau NIM')->placeholder('Email atau NIM')->type('text'); ?>
-    <?= $form->field($model, 'password')->label('Password')->placeholder('Masukkan password')->type('password'); ?>
-    <div class="flex items-center justify-between mb-4 mt-2">
-      <label class="flex items-center">
-        <input type="checkbox" name="remember" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-        <span class="ml-2 text-sm text-gray-600">Ingat saya</span>
-      </label>
-      <a href="/forgot" class="text-sm text-indigo-600 hover:text-indigo-700 font-semibold">Lupa password?</a>
+  <?php if ($m = App::$app->session->getFlash('error')): ?>
+    <div>
+      <p><?= htmlspecialchars($m) ?></p>
     </div>
-    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition">Login</button>
-  <?php Form::end(); ?>
-  <p class="text-center text-sm text-gray-600 mt-4">Belum punya akun? <a href="/register" class="text-indigo-600 hover:text-indigo-700 font-semibold">Daftar sekarang</a></p>
+  <?php endif; ?>
+
+  <div>
+    <?php $form = Form::begin('/login', 'post'); ?>
+      <?= Csrf::field() ?>
+      
+      <div>
+        <?= $form->field($model, 'identifier')->label('Email / NIM / NIP') ?>
+        <?= $form->field($model, 'password') ?>
+
+        <div>
+          <div>
+            <input id="remember" name="remember" type="checkbox" value="1">
+            <label for="remember">Remember me</label>
+          </div>
+
+          <div>
+            <a href="/forgot">Forgot password?</a>
+          </div>
+        </div>
+
+        <div>
+          <?= Form::button('Sign in') ?>
+        </div>
+      </div>
+    <?php Form::end(); ?>
+
+    <div>
+      <p>New to the system?</p>
+      <div>
+        <a href="/register">Create new account</a>
+      </div>
+    </div>
+  </div>
+
+  <p>© 2025 Politeknik Negeri Jakarta. All rights reserved.</p>
 </div>
